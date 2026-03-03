@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🌟 Çarpım Tablosu Macerası</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --sky: #6EC6F5; --pink: #FF6FA8; --yellow: #FFD94A;
+    --green: #5DDB8B; --purple: #A97BFF; --orange: #FF9F43;
+    --bg: #FFF8F0; --card: #ffffff;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Nunito', sans-serif; background: var(--bg); min-height: 100vh; overflow-x: hidden; position: relative; }
+
+  .stars { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; overflow: hidden; }
+  .star { position: absolute; font-size: 20px; animation: floatStar 6s ease-in-out infinite; opacity: 0.5; }
+  @keyframes floatStar { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-20px) rotate(180deg); } }
+
+  .wrapper { position: relative; z-index: 1; max-width: 800px; margin: 0 auto; padding: 20px; }
+
+  header { text-align: center; padding: 20px 0 10px; }
+  header h1 {
+    font-family: 'Fredoka One', cursive; font-size: clamp(2rem, 6vw, 3.5rem);
+    background: linear-gradient(135deg, var(--pink), var(--purple), var(--sky));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+
+  .stats-bar {
+    display: none; justify-content: center; gap: 12px; margin: 10px 0; flex-wrap: wrap;
+    transition: all 0.3s ease;
+  }
+  .stat-pill {
+    background: white; border-radius: 50px; padding: 6px 15px; font-weight: 800; font-size: 0.9rem;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05); display: flex; align-items: center; gap: 6px;
+  }
+  .stat-pill .val { color: var(--purple); }
+
+  .progress-wrap { background: #e8e8e8; border-radius: 50px; height: 12px; margin: 10px 0 20px; overflow: hidden; }
+  .progress-bar { height: 100%; background: linear-gradient(90deg, var(--pink), var(--purple)); transition: width 0.5s ease; }
+
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  .mascot { font-size: 5rem; display: block; margin: 10px auto; text-align: center; animation: bounce 2s infinite; }
+  @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+  
+  .table-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; max-width: 500px; margin: 20px auto; }
+  .table-btn {
+    font-family: 'Fredoka One', cursive; font-size: 1.5rem; padding: 15px 5px; border: none;
+    border-radius: 15px; cursor: pointer; color: white; box-shadow: 0 5px 0 rgba(0,0,0,0.1); transition: 0.2s;
+    position: relative;
+  }
+  .table-btn:active { transform: translateY(3px); box-shadow: 0 2px 0 rgba(0,0,0,0.1); }
+  .stars-badge { position: absolute; top: -5px; right: -5px; background: var(--yellow); font-size: 0.6rem; padding: 2px 5px; border-radius: 10px; color: #333; }
+
+  .random-btn {
+    display: block; width: fit-content; margin: 20px auto; background: linear-gradient(135deg, var(--pink), var(--purple));
+    color: white; font-family: 'Fredoka One'; padding: 15px 30px; border-radius: 50px; border: none; cursor: pointer;
+  }
+
+  .question-card { background: white; border-radius: 25px; padding: 30px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.05); margin-bottom: 20px; }
+  .question-text { font-family: 'Fredoka One'; font-size: 3.5rem; color: #333; margin: 15px 0; }
+  .answers-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .answer-btn {
+    font-family: 'Fredoka One'; font-size: 1.8rem; padding: 15px; background: white;
+    border: 3px solid #eee; border-radius: 20px; cursor: pointer; transition: 0.2s;
+  }
+  .answer-btn.correct { background: var(--green); color: white; border-color: var(--green); }
+  .answer-btn.wrong { background: var(--pink); color: white; border-color: var(--pink); }
+
+  .feedback { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0); z-index: 100; font-size: 6rem; transition: 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28); pointer-events: none; }
+  .feedback.show { transform: translate(-50%, -50%) scale(1); }
+
+  .btn-1 { background: #FF6FA8; } .btn-2 { background: #FF9F43; } .btn-3 { background: #FFD94A; color:#444 } .btn-4 { background: #5DDB8B; } .btn-5 { background: #6EC6F5; }
+  .btn-6 { background: #A97BFF; } .btn-7 { background: #FF6FA8; } .btn-8 { background: #FF9F43; } .btn-9 { background: #5DDB8B; } .btn-10 { background: #A97BFF; }
+</style>
+</head>
+<body>
+
+<div class="stars" id="stars"></div>
+<div class="feedback" id="feedback"></div>
+
+<div class="wrapper">
+  <div class="stats-bar" id="stats-bar">
+    <div class="stat-pill"><span>⭐</span> Puan: <span class="val" id="score-val">0</span></div>
+    <div class="stat-pill"><span>🔥</span> Seri: <span class="val" id="streak-val">0</span></div>
+  </div>
+
+  <div class="screen active" id="menu-screen">
+    <header>
+      <h1>✨ Çarpım Macerası ✨</h1>
+      <p style="color:#888; text-align:center">Eğlenerek öğrenmeye hazır mısın?</p>
+    </header>
+    <span class="mascot">🦄</span>
+    <div class="table-grid" id="table-grid"></div>
+    <button class="random-btn" onclick="startGame(0)">🎲 Karışık Sorular!</button>
+  </div>
+
+  <div class="screen" id="game-screen">
+    <div class="progress-wrap"><div class="progress-bar" id="progress-bar" style="width:0%"></div></div>
+    <div class="question-card">
+      <div id="question-number" style="font-weight:bold; color:#aaa">Soru 1 / 10</div>
+      <div class="question-text">
+        <span id="q-a">5</span> × <span id="q-b">3</span> = ?
+      </div>
+      <div style="height:6px; background:#eee; border-radius:10px; overflow:hidden">
+        <div id="timer-fill" style="height:100%; background:var(--green); width:100%"></div>
+      </div>
+    </div>
+    <div class="answers-grid" id="answers-grid"></div>
+  </div>
+
+  <div class="screen" id="result-screen" style="text-align:center">
+    <span id="result-mascot" style="font-size:5rem">🎉</span>
+    <h2 id="result-title" style="font-family:'Fredoka One'; font-size:2.5rem; margin:10px 0">Harika!</h2>
+    <div id="stars-earned" style="font-size:3rem; margin:20px 0">⭐⭐⭐</div>
+    <div style="background:white; padding:20px; border-radius:20px; margin-bottom:20px">
+        <p>Toplam Puan: <strong id="r-score">0</strong></p>
+        <p>Doğru Sayısı: <strong id="r-correct">0</strong></p>
+    </div>
+    <button class="random-btn" onclick="location.reload()">🏠 Ana Sayfaya Dön</button>
+  </div>
+</div>
+
+<script>
+let state = {
+  currentTable: 0, questions: [], qIndex: 0, score: 0, correct: 0, streak: 0, timerInterval: null, timeLeft: 10, records: JSON.parse(localStorage.getItem('carpim_v2') || '{}')
+};
+
+function buildMenu() {
+  const grid = document.getElementById('table-grid');
+  grid.innerHTML = '';
+  for (let i = 1; i <= 10; i++) {
+    const rec = state.records[i] || {stars: 0};
+    const btn = document.createElement('button');
+    btn.className = `table-btn btn-${i}`;
+    btn.innerHTML = `${i} ${rec.stars > 0 ? `<span class="stars-badge">${'⭐'.repeat(rec.stars)}</span>` : ''}`;
+    btn.onclick = () => startGame(i);
+    grid.appendChild(btn);
+  }
+}
+
+function startGame(n) {
+  state.currentTable = n;
+  state.questions = [];
+  state.qIndex = 0; state.score = 0; state.correct = 0; state.streak = 0;
+  
+  if(n === 0) {
+    for(let i=0; i<10; i++) state.questions.push({a: Math.floor(Math.random()*9)+2, b: Math.floor(Math.random()*9)+2});
+  } else {
+    for(let i=1; i<=10; i++) state.questions.push({a: n, b: i});
+    state.questions.sort(() => Math.random() - 0.5);
+  }
+
+  document.getElementById('menu-screen').classList.remove('active');
+  document.getElementById('result-screen').classList.remove('active');
+  document.getElementById('game-screen').classList.add('active');
+  document.getElementById('stats-bar').style.display = 'flex';
+  showQuestion();
+}
+
+function showQuestion() {
+  if (state.qIndex >= state.questions.length) return endGame();
+  
+  const q = state.questions[state.qIndex];
+  const correct = q.a * q.b;
+  
+  document.getElementById('q-a').textContent = q.a;
+  document.getElementById('q-b').textContent = q.b;
+  document.getElementById('question-number').textContent = `Soru ${state.qIndex + 1} / ${state.questions.length}`;
+  document.getElementById('progress-bar').style.width = (state.qIndex / state.questions.length * 100) + '%';
+  
+  const choices = [correct];
+  while(choices.length < 4) {
+    let wrong = correct + (Math.floor(Math.random()*10) - 5);
+    if(wrong > 0 && !choices.includes(wrong)) choices.push(wrong);
+  }
+  choices.sort(() => Math.random() - 0.5);
+
+  const grid = document.getElementById('answers-grid');
+  grid.innerHTML = '';
+  choices.forEach(c => {
+    const btn = document.createElement('button');
+    btn.className = 'answer-btn';
+    btn.textContent = c;
+    btn.onclick = () => checkAnswer(c, correct, btn);
+    grid.appendChild(btn);
+  });
+
+  startTimer();
+}
+
+function startTimer() {
+  clearInterval(state.timerInterval);
+  state.timeLeft = 10;
+  const bar = document.getElementById('timer-fill');
+  state.timerInterval = setInterval(() => {
+    state.timeLeft -= 0.1;
+    bar.style.width = (state.timeLeft * 10) + '%';
+    if(state.timeLeft <= 0) checkAnswer(-1, -1, null);
+  }, 100);
+}
+
+function checkAnswer(val, correct, btn) {
+  clearInterval(state.timerInterval);
+  const isCorrect = val === correct;
+  
+  if(isCorrect) {
+    state.correct++;
+    state.streak++;
+    state.score += Math.ceil(state.timeLeft * 10);
+    if(btn) btn.classList.add('correct');
+    showFeedback('⭐');
+  } else {
+    state.streak = 0;
+    if(btn) btn.classList.add('wrong');
+    showFeedback('❌');
+  }
+
+  document.getElementById('score-val').textContent = state.score;
+  document.getElementById('streak-val').textContent = state.streak;
+  
+  setTimeout(() => {
+    state.qIndex++;
+    showQuestion();
+  }, 1000);
+}
+
+function showFeedback(txt) {
+  const f = document.getElementById('feedback');
+  f.textContent = txt;
+  f.classList.add('show');
+  setTimeout(() => f.classList.remove('show'), 800);
+}
+
+function endGame() {
+  document.getElementById('game-screen').classList.remove('active');
+  document.getElementById('result-screen').classList.add('active');
+  document.getElementById('stats-bar').style.display = 'none';
+
+  const pct = state.correct / state.questions.length;
+  let stars = pct >= 0.9 ? 3 : pct >= 0.7 ? 2 : pct >= 0.4 ? 1 : 0;
+  
+  if(state.currentTable > 0) {
+    if(!state.records[state.currentTable] || stars > state.records[state.currentTable].stars) {
+        state.records[state.currentTable] = {stars: stars};
+        localStorage.setItem('carpim_v2', JSON.stringify(state.records));
+    }
+  }
+
+  document.getElementById('r-score').textContent = state.score;
+  document.getElementById('r-correct').textContent = state.correct;
+  document.getElementById('stars-earned').textContent = '⭐'.repeat(stars);
+}
+
+for (let i = 0; i < 20; i++) {
+  const s = document.createElement('div');
+  s.className = 'star';
+  s.textContent = '✦';
+  s.style.left = Math.random() * 100 + '%';
+  s.style.top = Math.random() * 100 + '%';
+  s.style.animationDelay = Math.random() * 5 + 's';
+  document.getElementById('stars').appendChild(s);
+}
+
+buildMenu();
+</script>
+</body>
+</html>
